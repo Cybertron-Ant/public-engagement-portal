@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ const MotionLink = motion(Link);
 const MotionDiv = motion.div;
 
 export function Navigation() {
+  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user } = useUser();
   const { isPublicDataEnabled, error, initialize, setPublicDataEnabled } = useVisibilityStore();
@@ -61,12 +62,40 @@ export function Navigation() {
               whileHover={motionVariants.hoverEnergize}
             >
               <span className="text-xl font-bold text-[#a8c6ff] tracking-wider font-display">
-                Public Engagement Portal
+                <span className="md:hidden">PEP</span>
+                <span className="hidden md:inline">Public Engagement Portal</span>
               </span>
             </MotionLink>
 
-            {/* Navigation Links */}
-            <div className="flex items-center">
+            {/* Mobile Menu Button */}
+            <div className="flex items-center md:hidden">
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "hover:shadow-[0_0_10px_rgba(168,198,255,0.2)] transition-shadow duration-200"
+                  }
+                }}
+              />
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="text-[#8ba2cc] hover:text-[#a8c6ff] p-2 ml-2"
+                aria-label="Toggle menu"
+              >
+                {!isOpen ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center">
               {/* Main Navigation */}
               <div className="flex items-center space-x-4 mr-6">
                 {navItems.map((item) => (
@@ -134,6 +163,69 @@ export function Navigation() {
               </div>
             </div>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ 
+              opacity: isOpen ? 1 : 0,
+              height: isOpen ? "auto" : 0
+            }}
+            transition={{ duration: 0.2 }}
+            className={`md:hidden absolute top-16 left-0 right-0 bg-[#1a2942]/95 backdrop-blur-md border-b border-[#4d5b8c]/30 overflow-hidden`}
+          >
+            <div className="px-4 py-2 space-y-2">
+              {navItems.map((item) => (
+                <MotionLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`block px-3 py-2 rounded-sm text-sm font-medium tracking-wide transition-all duration-200 ${
+                    location.pathname === item.path
+                      ? "bg-[#2d3f59]/50 text-[#a8c6ff] shadow-[0_0_10px_rgba(168,198,255,0.1)]"
+                      : "text-[#8ba2cc] hover:text-[#a8c6ff] hover:bg-[#2d3f59]/30"
+                  }`}
+                >
+                  {item.label}
+                </MotionLink>
+              ))}
+              
+              {/* Mobile Public Data Toggle */}
+              <div className="flex items-center space-x-2 px-3 py-2">
+                <motion.button
+                  onClick={togglePublicVisibility}
+                  className={`
+                    group relative inline-flex h-8 w-14 items-center rounded-sm
+                    transition-all duration-300 focus:outline-none
+                    ${isPublicDataEnabled 
+                      ? 'bg-[#2d3f59]/50 shadow-[0_0_10px_rgba(168,198,255,0.1)]'
+                      : 'bg-[#1a2942]/80'
+                    }
+                  `}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <motion.span
+                    className={`
+                      inline-block h-6 w-6 transform rounded-sm bg-[#8ba2cc] shadow-lg transition-transform
+                      ${isPublicDataEnabled ? 'translate-x-7' : 'translate-x-1'}
+                    `}
+                    layout
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                  />
+                </motion.button>
+                <span className={`text-sm font-medium ${
+                  isPublicDataEnabled ? 'text-[#a8c6ff]' : 'text-[#8ba2cc]'
+                }`}>
+                  {isPublicDataEnabled ? 'Public' : 'Private'}
+                </span>
+              </div>
+            </div>
+          </motion.div>
           
           {/* Error Message */}
           {error && (
