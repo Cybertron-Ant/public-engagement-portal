@@ -15,7 +15,7 @@ export class APIError extends Error {
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: env.API_URL,
+  baseURL: env.VITE_API_URL || '/',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -51,4 +51,4 @@ apiClient.interceptors.response.use(
   }
 )
 
-export default apiClient 
+export default apiClient
